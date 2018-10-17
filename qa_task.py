@@ -487,7 +487,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
     #
     args.mode='train'
-    args.from_checkpoint = 'default'
+    # args.from_checkpoint = 'default'
     # args.use_mem=False
     # args.single_KL=True
     args.read_heads=3

@@ -353,7 +353,7 @@ def prepare_sample_batch(diag_list,word_space_size_input,word_space_size_output,
         # print(output_vec)
         # print('====')
 
-        output_vec = np.reshape(np.asarray(output_vec), (-1, 1))
+        output_vec = np.array([onehot(code, word_space_size_output) for code in output_vec])
 
         input_vec = [onehot(code, word_space_size_input) for code in input_vec]
         input_vecs.append(input_vec)
