@@ -253,7 +253,7 @@ class VariationalDNC:
             )
 
 
-        self.testing_phase = tf.placeholder(tf.bool, name='clear_mem')
+        self.testing_phase = tf.placeholder(tf.bool, name='testing_phase')
 
         self.build_graph()
 
