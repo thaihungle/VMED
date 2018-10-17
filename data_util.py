@@ -7,6 +7,7 @@ import pickle
 import sys
 import os
 import nltk
+import tqdm
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../')
 from nltk.corpus import stopwords
 from nltk.translate.bleu_score import sentence_bleu
@@ -129,11 +130,11 @@ def bleu_score(input_batch, target_batch, predict_batch, token2str, print_prob=0
         str_predict = []
         str_input=[]
         for t in target_batch[b]:
-            if t > 2 and token2str[t] != '.':
+            if t > 2:
                 trim_target.append(t)
                 str_target.append(token2str[t])
         for t in predict_batch[b]:
-            if t > 2 and token2str[t] != '.':
+            if t > 2:
                 trim_predict.append(t)
                 str_predict.append(token2str[t])
         if np.random.rand()>print_prob:
@@ -160,11 +161,11 @@ def bleu_score4(input_batch, target_batch, predict_batch, token2str, print_prob=
         str_predict = []
         str_input=[]
         for t in target_batch[b]:
-            if t >2 and token2str[t]!='.':
+            if t >2:
                 trim_target.append(t)
                 str_target.append(token2str[t])
         for t in predict_batch[b]:
-            if t >2 and token2str[t]!='.':
+            if t >2:
                 trim_predict.append(t)
                 str_predict.append(token2str[t])
         if np.random.rand()>print_prob:
@@ -197,7 +198,7 @@ def bleu_score4(input_batch, target_batch, predict_batch, token2str, print_prob=
         s4.append(BLEUscore4)
     return [np.mean(s1),np.mean(s2),np.mean(s3),np.mean(s4)]
 
-def cherry_pick(input_batch, target_batch, predict_batch, token2str, top=5, mat=None):
+def cherry_pick(input_batch, target_batch, predict_batch, token2str, top=5):
     all_scores=[]
     all_in=[]
     all_out=[]
@@ -223,16 +224,12 @@ def cherry_pick(input_batch, target_batch, predict_batch, token2str, top=5, mat=
         all_out.append(str_target)
         all_pred.append(str_predict)
         try:
-            BLEUscore4 = sentence_bleu([trim_target], trim_predict, weights=(0.33, 0.33, 0.33, 0, 0),smoothing_function=SmoothingFunction().method7)
+            BLEUscore3 = sentence_bleu([trim_target], trim_predict, weights=(0.33, 0.33, 0.33, 0, 0),smoothing_function=SmoothingFunction().method7)
         except:
-            BLEUscore4 = 0
-        all_scores.append(BLEUscore4)
+            BLEUscore3 = 0
+        all_scores.append(BLEUscore3)
 
-        # all_scores.append(len(trim_predict))
 
-        # bc=bow_score(np.asarray([str_input]),np.asarray([trim_target]),
-        #           np.asarray([trim_predict]),token2str,mat)
-        # all_scores.append(bc)
     alls = np.asarray(all_scores)
 
     mind=alls.argsort()[::-1][:top]
