@@ -61,7 +61,6 @@ def single_qa_task(args):
 
     words_count = args.mem_size
     word_size = args.word_size
-    read_heads = args.read_heads
 
     learning_rate = args.learning_rate
     momentum = 0.9
@@ -101,7 +100,7 @@ def single_qa_task(args):
                 use_teacher=args.use_teacher,
                 attend_dim=args.attend,
                 enable_drop_out=args.drop_out_keep>0,
-                memory_read_heads_decode=args.read_heads,
+                memory_read_heads_decode=args.num_mog_mode,
                 nlayer=args.nlayer,
                 name='VDNC',
                 gt_type=args.gt_type,
@@ -455,19 +454,16 @@ if __name__ == '__main__':
     parser.add_argument('--data_dir', default="./data/cornell20_20000_10/trim_20qa_single.pkl")
     parser.add_argument('--from_checkpoint', default="")
     parser.add_argument('--hidden_dim', default=768, type=int)
-    parser.add_argument('--sampled_loss_dim', default=0, type=int)
     parser.add_argument('--emb_dim', default=96, type=int)
     parser.add_argument('--attend', default=0, type=int)
     parser.add_argument('--mem_size', default=16, type=int)
     parser.add_argument('--word_size', default=64, type=int)
     parser.add_argument('--batch_size', default=256, type=int)
-    parser.add_argument('--read_heads', default=4, type=int)
+    parser.add_argument('--num_mog_mode', default=4, type=int)
     parser.add_argument('--beam_size', default=0, type=int)
     parser.add_argument('--nlayer', default=3, type=int)
     parser.add_argument('--drop_out_keep', default=-1, type=float)
     parser.add_argument('--learning_rate', default=1e-4, type=float)
-    parser.add_argument('--lr_decay_step', default=10000, type=float)
-    parser.add_argument('--lr_decay_rate', default=0.9, type=float)
     parser.add_argument('--iterations', default=1000000, type=int)
     parser.add_argument('--valid_time', default=100, type=int)
     parser.add_argument('--gpu_ratio', default=0.4, type=float)
@@ -476,11 +472,10 @@ if __name__ == '__main__':
     parser.add_argument('--gpu_device', default="1,2,3", type=str)
     parser.add_argument('--use_pretrain_emb', default="word2vec", type=str)
     parser.add_argument('--gt_type', default="rnn", type=str)
-    parser.add_argument('--persist_mode', default=False, type=str2bool)
     parser.add_argument('--single_KL', default=False, type=str2bool)
     parser.add_argument('--anneal_KL', default=True, type=str2bool)
     parser.add_argument('--ratio_start_anneal', default=1.0, type=float)
-    parser.add_argument('--valid_size', default=5000, type=int)
+    parser.add_argument('--valid_size', default=10000, type=int)
     parser.add_argument('--test_file', default="./data/test_file.txt", type=str)
 
     args = parser.parse_args()
@@ -490,7 +485,7 @@ if __name__ == '__main__':
     # args.from_checkpoint = 'default'
     # args.use_mem=False
     # args.single_KL=True
-    args.read_heads=3
+    args.num_mog_mode=3
     args.mem_size=15
     # args.batch_size=16
     args.use_pretrain_emb=""
