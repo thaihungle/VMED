@@ -384,6 +384,7 @@ class VariationalDNC:
         """
 
         last_read_vectors = memory_state[6]  # read values from memory
+        last_read_w = memory_state[5]
 
         alphas = None
         controller=self.controller2
@@ -436,7 +437,7 @@ class VariationalDNC:
                 step2 = tf.concat([step2, att], axis=-1)  # bs x (decoder_input_size + h)
 
 
-        mixture_w =   tf.matmul(controller_state[-1][1], self.Wmixw)
+        mixture_w = tf.reduce_max(last_read_w, axis=1)  # [self.batch_size, self.read_heads_decode]
         mixture_w = tf.nn.softmax(mixture_w, dim=-1)  # [self.batch_size, self.read_heads_decode]
         if self.use_mem:
             dist2 = self.get_the_prior_dist(last_read_vectors, self.word_size)
