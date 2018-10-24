@@ -15,6 +15,7 @@ to the input sequence and output sequence. The sequences contain index of the wo
 - To simulate conversations with multiple pairs, just concatenate all sequences until the response moment as the input sequence,
 and the ground truth response as the output sequence<br />
 - Please refer https://github.com/Conchylicultor/DeepQA for data preprocessing details<br />
+
 To run the code:<br />
 - train VMED example: python qa_task.py --mode=train --num_mog_mode=3 --mem_size=15 --data_dir='path_to_pickle'<br />
 - test VMED example: python qa_task.py --mode=test --num_mog_mode=3 --mem_size=15 --data_dir='path_to_pickle'<br />
