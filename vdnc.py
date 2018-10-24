@@ -1377,6 +1377,7 @@ class VariationalDNC:
                 self.packed_kl_losses = single_kl
             else:
                 self.packed_kl_losses = utility.pack_into_tensor(final_results[14], axis=1)
+
             self.packed_memory_view_encoder = {
                 'free_gates': utility.pack_into_tensor(encoder_results[3], axis=1),
                 'allocation_gates': utility.pack_into_tensor(encoder_results[4], axis=1),
@@ -1386,20 +1387,31 @@ class VariationalDNC:
                 'usage_vectors': utility.pack_into_tensor(encoder_results[8], axis=1),
                 'final_controller_ch': encoder_results[9],
             }
-            self.packed_memory_view_decoder = {
-                'last_reads': utility.pack_into_tensor(final_results[19], axis=1),
-                'free_gates': utility.pack_into_tensor(final_results[3], axis=1),
-                'allocation_gates': utility.pack_into_tensor(final_results[4], axis=1),
-                'write_gates': utility.pack_into_tensor(final_results[5], axis=1),
-                'read_weightings': utility.pack_into_tensor(final_results[6], axis=1),
-                'write_weightings': utility.pack_into_tensor(final_results[7], axis=1),
-                'usage_vectors': utility.pack_into_tensor(final_results[8], axis=1),
-                'final_controller_ch':final_results[9],
-                'zs':utility.pack_into_tensor(final_results[15], axis=1),
-                'dist1s': utility.pack_into_tensor(final_results[16], axis=1),
-                'dist2s': utility.pack_into_tensor(final_results[17], axis=1),
-                'mixturews': utility.pack_into_tensor(final_results[18], axis=1)
-            }
+            if self.single_KL:
+                self.packed_memory_view_decoder = {
+                    'free_gates': utility.pack_into_tensor(final_results[3], axis=1),
+                    'allocation_gates': utility.pack_into_tensor(final_results[4], axis=1),
+                    'write_gates': utility.pack_into_tensor(final_results[5], axis=1),
+                    'read_weightings': utility.pack_into_tensor(final_results[6], axis=1),
+                    'write_weightings': utility.pack_into_tensor(final_results[7], axis=1),
+                    'usage_vectors': utility.pack_into_tensor(final_results[8], axis=1),
+                    'final_controller_ch': final_results[9],
+                }
+            else:
+                self.packed_memory_view_decoder = {
+                    'last_reads': utility.pack_into_tensor(final_results[19], axis=1),
+                    'free_gates': utility.pack_into_tensor(final_results[3], axis=1),
+                    'allocation_gates': utility.pack_into_tensor(final_results[4], axis=1),
+                    'write_gates': utility.pack_into_tensor(final_results[5], axis=1),
+                    'read_weightings': utility.pack_into_tensor(final_results[6], axis=1),
+                    'write_weightings': utility.pack_into_tensor(final_results[7], axis=1),
+                    'usage_vectors': utility.pack_into_tensor(final_results[8], axis=1),
+                    'final_controller_ch':final_results[9],
+                    'zs':utility.pack_into_tensor(final_results[15], axis=1),
+                    'dist1s': utility.pack_into_tensor(final_results[16], axis=1),
+                    'dist2s': utility.pack_into_tensor(final_results[17], axis=1),
+                    'mixturews': utility.pack_into_tensor(final_results[18], axis=1)
+                }
 
     def get_outputs(self):
         """

@@ -29,7 +29,7 @@ def load(path):
 def single_qa_task(args):
     dirname = os.path.dirname(os.path.abspath(__file__)) + '/data/save/'
     print(dirname)
-    ckpts_dir = os.path.join(dirname, 'checkpoints_qa_{}_single_in_single_out_persit'.format(args.task))
+    ckpts_dir = os.path.join(dirname, 'checkpoints_qa_{}'.format(args.task))
 
     llprint("Loading Data ... ")
 
@@ -423,7 +423,7 @@ if __name__ == '__main__':
     parser.add_argument('--mode', default="train")
     parser.add_argument('--use_mem', default=True, type=str2bool)
     parser.add_argument('--use_teacher', default=False, type=str2bool)
-    parser.add_argument('--task', default="cornell20_validpointer_20000_10_clean")
+    parser.add_argument('--task', default="task")
     parser.add_argument('--data_dir', default="./data/cornell20_20000_10/trim_20qa_single.pkl")
     parser.add_argument('--from_checkpoint', default="")
     parser.add_argument('--hidden_dim', default=768, type=int)
@@ -453,21 +453,7 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
-    #
-    args.mode='train'
-    args.from_checkpoint = 'VDNC.Truemem_Truedec_Truedua_Falsewrp_15wsz_64msz_Falsetea_0att_Falseper_768hid_3nread_3nlayer'
-    # args.use_mem=False
-    # args.single_KL=True
-    args.num_mog_mode=3
-    args.mem_size=15
-    # args.batch_size=16
-    args.use_pretrain_emb=""
-    args.valid_time=1
-    args.batch_size=1
-    args.valid_size=1
-    # args.beam_size = 3
-    # args.attend=64
-    # args.task = 'cornell20_x2'
+
 
     print(args)
 

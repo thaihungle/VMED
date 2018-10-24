@@ -7,7 +7,7 @@ import pickle
 import sys
 import os
 import nltk
-import tqdm
+from tqdm import tqdm
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../')
 from nltk.corpus import stopwords
 from nltk.translate.bleu_score import sentence_bleu
@@ -198,53 +198,6 @@ def bleu_score4(input_batch, target_batch, predict_batch, token2str, print_prob=
         s4.append(BLEUscore4)
     return [np.mean(s1),np.mean(s2),np.mean(s3),np.mean(s4)]
 
-def cherry_pick(input_batch, target_batch, predict_batch, token2str, top=5):
-    all_scores=[]
-    all_in=[]
-    all_out=[]
-    all_pred=[]
-    for b in range(target_batch.shape[0]):
-        trim_target = []
-        trim_predict = []
-        str_target = []
-        str_predict = []
-        str_input=[]
-        for t in target_batch[b]:
-            if t >2 and token2str[t]!='.' and  token2str[t] not in cachedStopWords:
-                trim_target.append(t)
-                str_target.append(token2str[t])
-        for t in predict_batch[b]:
-            if t >2 and token2str[t]!='.' and  token2str[t] not in cachedStopWords:
-                trim_predict.append(t)
-                str_predict.append(token2str[t])
-        for t in input_batch[b]:
-            if t > 2:
-                str_input.append(token2str[t])
-        all_in.append(str_input)
-        all_out.append(str_target)
-        all_pred.append(str_predict)
-        try:
-            BLEUscore3 = sentence_bleu([trim_target], trim_predict, weights=(0.33, 0.33, 0.33, 0, 0),smoothing_function=SmoothingFunction().method7)
-        except:
-            BLEUscore3 = 0
-        all_scores.append(BLEUscore3)
-
-
-    alls = np.asarray(all_scores)
-
-    mind=alls.argsort()[::-1][:top]
-    res_in = []
-    res_out = []
-    res_pred = []
-    res_score = []
-    for ind in mind:
-        res_in.append(all_in[ind])
-        res_out.append(all_out[ind])
-        res_pred.append(all_pred[ind])
-        res_score.append(all_scores[ind])
-    return res_in, res_out, res_pred, res_score
-
-
 
 def bow_score(input_batch, target_batch, predict_batch, token2str, mat=None):
     s1=[]
@@ -313,7 +266,7 @@ def prepare_sample_batch(diag_list,word_space_size_input,word_space_size_output,
             index2 = (index+bs) % len(diag_list)
         minlen=max(len(diag_list[index2][0]),minlen)
         moutlne = max(len(diag_list[index2][1]), moutlne)
-    # moutlne*=2
+
     input_vecs=[]
     output_vecs=[]
     seq_len = minlen + 1
