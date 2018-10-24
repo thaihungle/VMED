@@ -215,24 +215,13 @@ class VariationalDNC:
             # distribution transformation from memory to posterior space
             self.WLz_xy = tf.get_variable('WLz_xy', [self.word_size+self.size_gt, self.word_size],
                                        initializer=tf.random_normal_initializer(stddev=0.1))
-            self.bz_xy = tf.get_variable('bz_xy', [self.word_size],
-                                        initializer=tf.initializers.random_uniform(-1, 1))
             self.WLz_xy2 = tf.get_variable('WLz_xy2', [self.word_size, self.word_size],
                                           initializer=tf.random_normal_initializer(stddev=0.1))
-            self.bz_xy2 = tf.get_variable('bz_xy2', [self.word_size],
-                                         initializer=tf.initializers.random_uniform(-1, 1))
             # distribution transformation from memory to prior space
             self.WLz_x = tf.get_variable('WLz_x', [self.word_size, self.word_size],
                                           initializer=tf.random_normal_initializer(stddev=0.1))
-            self.bz_x = tf.get_variable('bz_x', [self.word_size],
-                                         initializer=tf.initializers.random_uniform(-1, 1))
             self.WLz_x2 = tf.get_variable('WLz_x2', [self.word_size, self.word_size],
                                          initializer=tf.random_normal_initializer(stddev=0.1))
-            self.bz_x2 = tf.get_variable('bz_x2', [self.word_size],
-                                         initializer=tf.initializers.random_uniform(-1, 1))
-
-            self.Wmixw = tf.get_variable('Wmixw', [self.hidden_controller_dim, self.read_heads_decode],
-                                          initializer=tf.random_normal_initializer(stddev=0.1))
 
 
             #similar to the case of single Gaussian
@@ -241,7 +230,6 @@ class VariationalDNC:
                                           initializer=tf.random_normal_initializer(stddev=0.1))
             self.WLz_xy_uni2 = tf.get_variable('WLz_xy_uni2', [self.word_size, self.word_size],
                                               initializer=tf.random_normal_initializer(stddev=0.1))
-
             self.WLz_x_uni = tf.get_variable('WLz_x_uni', [self.hidden_controller_dim, self.word_size],
                                          initializer=tf.random_normal_initializer(stddev=0.1))
             self.WLz_x_uni2 = tf.get_variable('WLz_x_uni2', [self.word_size, self.word_size],
@@ -316,11 +304,8 @@ class VariationalDNC:
     def get_the_posterior_dist(self, read_vector_y):
         read_vector_y = tf.reshape(read_vector_y, [self.batch_size, -1])
         dist_vector = tf.matmul(read_vector_y, self.WLz_xy)  #  word size
-        dist_vector += self.bz_xy
         dist_vector = tf.nn.relu(dist_vector)
         dist_vector = tf.matmul(dist_vector, self.WLz_xy2)  # word size
-        dist_vector += self.bz_xy2
-        # dist_vector = tf.nn.relu(dist_vector)
         mean, std = tf.split(dist_vector, num_or_size_splits=2, axis=-1)
         std = tf.nn.softplus(std)
         dist_vector = tf.concat([mean,std], axis=-1)
@@ -329,11 +314,8 @@ class VariationalDNC:
     def get_the_prior_dist(self, read_vector_x, dim):
         dist_vector = tf.reshape(read_vector_x, [-1, dim])
         dist_vector = tf.matmul(dist_vector, self.WLz_x) #  word size
-        dist_vector += self.bz_x
         dist_vector = tf.nn.relu(dist_vector)
         dist_vector = tf.matmul(dist_vector, self.WLz_x2)  # word size
-        dist_vector += self.bz_x2
-        # dist_vector = tf.nn.relu(dist_vector)
         mean, std = tf.split(dist_vector, num_or_size_splits=2, axis=-1)
         std = tf.nn.softplus(std)
         dist_vector = tf.concat([mean, std], axis=-1)
@@ -343,24 +325,18 @@ class VariationalDNC:
     def get_the_posterior_dist_uni(self, read_vector_y):
         read_vector_y = tf.reshape(read_vector_y, [self.batch_size, -1])
         dist_vector = tf.matmul(read_vector_y, self.WLz_xy_uni)  # word size
-        dist_vector += self.bz_xy
         dist_vector = tf.nn.relu(dist_vector)
         dist_vector = tf.matmul(dist_vector, self.WLz_xy_uni2)  # word size
-        dist_vector += self.bz_xy2
-        # dist_vector = tf.nn.relu(dist_vector)
         mean, std = tf.split(dist_vector, num_or_size_splits=2, axis=-1)
         std = tf.nn.softplus(std)
         dist_vector = tf.concat([mean, std], axis=-1)
         return dist_vector
 
-    def get_the_pior_dist_uni(self, dist_vector):
+    def get_the_prior_dist_uni(self, dist_vector):
         if not self.single_KL:
             dist_vector = tf.matmul(dist_vector, self.WLz_x_uni)  # word size
-            dist_vector += self.bz_x
             dist_vector = tf.nn.relu(dist_vector)
             dist_vector = tf.matmul(dist_vector, self.WLz_x_uni2)  # word size
-            dist_vector += self.bz_x2
-            # dist_vector = tf.nn.relu(dist_vector)
         mean, std = tf.split(dist_vector, num_or_size_splits=2, axis=-1)
         std = tf.nn.softplus(std)
         dist_vector = tf.concat([mean, std], axis=-1)
@@ -442,7 +418,7 @@ class VariationalDNC:
         if self.use_mem:
             dist2 = self.get_the_prior_dist(last_read_vectors, self.word_size)
         else:
-            dist2 = self.get_the_pior_dist_uni(controller_state[-1][1])
+            dist2 = self.get_the_prior_dist_uni(controller_state[-1][1])
 
         if self.use_mem:
             dist1 = self.get_the_posterior_dist(tf.concat([tf.reduce_sum(tf.tile(tf.expand_dims(mixture_w,1),[1,self.word_size,1])*\
@@ -598,7 +574,7 @@ class VariationalDNC:
 
         if self.gt_type=='bow':
             """bag of word encoding of given data"""
-            feed_value_gt = tf.reduce_sum(self.target_output[:,:time+1,:], axis=1)
+            feed_value_gt = tf.reduce_sum(self.target_output[:,:time,:], axis=1)
 
             if self.use_emb_decoder:
                 if self.dual_emb:
@@ -609,10 +585,8 @@ class VariationalDNC:
                 step_gt = feed_value_gt
         else:
             """rnn encoding of given data"""
-            step_gt = self.encode_gt_rnn(time+1)
+            step_gt = self.encode_gt_rnn(time)
 
-        #weaken posterior
-        step_gt = tf.nn.dropout(step_gt, keep_prob=0.7)
         # compute one step of controller
         output_list = self._step_op_vdecoder(time, step_input, step_gt, memory_state, controller_state)
 
@@ -1163,10 +1137,12 @@ class VariationalDNC:
             X = self.target_output[:,_time,:]
 
             X = tf.reshape(X, [self.batch_size, self.output_size])
-            if self.dual_emb:
-                X = tf.matmul(X, self.W_emb_decoder)
-            else:
-                X = tf.matmul(X, self.W_emb_encoder)
+            if self.use_emb_decoder:
+                if self.dual_emb:
+                    X = tf.stop_gradient(tf.matmul(X, self.W_emb_decoder))
+                else:
+                    X = tf.stop_gradient(tf.matmul(X, self.W_emb_encoder))
+
 
             _, nns = rnn_cell(X, _decoder_state)
 
@@ -1309,7 +1285,7 @@ class VariationalDNC:
                     for ns, ns_y in zip(nstate, nstate_y):
                         nh = tf.concat([ns[0]+ns_y[0],ns[1]+ns_y[1]],axis=-1)
                         nh = tf.matmul(tf.reshape(nh, [self.batch_size, -1]), self.W_recog)
-                        dist = self.get_the_pior_dist_uni(tf.tanh(nh))
+                        dist = self.get_the_prior_dist_uni(tf.tanh(nh))
                         z = self.sample_the_uni(dist)
                         newnstate.append(LSTMStateTuple(ns[0],z))
                     return newnstate, dist
@@ -1321,7 +1297,7 @@ class VariationalDNC:
                         nh0 = tf.concat([ns[0], ns[1]], axis=-1)
                         nh = tf.matmul(tf.reshape(nh0, [self.batch_size, -1]), self.W_pior)
                         if self.read_heads_decode==1:
-                            dist = self.get_the_pior_dist_uni(nh)
+                            dist = self.get_the_prior_dist_uni(nh)
                             z = self.sample_the_uni(dist)
                         else:
                             dist = self.get_the_prior_dist(

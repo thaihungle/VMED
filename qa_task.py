@@ -7,7 +7,6 @@ import pickle
 import time
 import sys
 import os
-import beam_search
 
 sys.path.append(os.path.dirname(os.path.abspath(__file__))+'/../')
 from vdnc import VariationalDNC as DNC
@@ -16,7 +15,7 @@ import data_util
 import plot_tool
 import random
 random.seed(time.time())
-TOTAL_ANNEL_EPOCH=100
+TOTAL_ANNEAL_EPOCH=100
 
 def llprint(message):
     sys.stdout.write(message)
@@ -110,7 +109,7 @@ def single_qa_task(args):
             optimizer = tf.train.RMSPropOptimizer(learning_rate, momentum=momentum)
             # optimizer = tf.train.AdamOptimizer(learning_rate=learning_rate)
             _, prob, loss, apply_gradients, loss_rec, loss_kl, alpha = \
-                ncomputer.build_vloss_function_mask(optimizer, clip_s=10, total_epoch=TOTAL_ANNEL_EPOCH)
+                ncomputer.build_vloss_function_mask(optimizer, clip_s=10, total_epoch=TOTAL_ANNEAL_EPOCH)
             llprint("Done!\n")
             llprint("Done!\n")
 
@@ -250,25 +249,28 @@ def single_qa_task(args):
                                 trscores.append(data_util.bleu_score(np.asarray(brin), np.asarray(brout),
                                                                              np.asarray(bout_list), tok2str))
 
-
                             estr = ''
                             dstr = ''
                             for t in brin[0]:
-                                estr+=tok2str[t]+' '
+                                estr += tok2str[t] + ' '
                             for tt in range(len(bout_list[0])):
-                                print(mem_view['dist1s'][0][tt])
-                                print(mem_view['dist2s'][0][tt])
+                                # print(mem_view['dist1s'][0][tt])
+                                # print(mem_view['dist2s'][0][tt])
                                 print(mem_view['mixturews'][0][tt])
-                                print(mem_view['last_reads'][0][tt])
-                                print('---')
-                                dstr+=tok2str[bout_list[0][tt]]+' '
-                                print('{}-->{}'.format(estr,dstr))
+                                # print(mem_view['last_reads'][0][tt])
+                                # print('---')
+                                dstr += tok2str[bout_list[0][tt]] + ' '
                                 # plot_tool.plot_mgauss(mem_view['dist2s'][0][tt],
                                 #                       mem_view['mixturews'][0][tt],
                                 #                       mem_view['dist1s'][0][tt])
-                                plot_tool.plot_tsne(mem_view['dist2s'][0][tt],
-                                                      mem_view['mixturews'][0][tt],
-                                                      mem_view['dist1s'][0][tt])
+                                # plot_tool.plot_tsne(mem_view['dist2s'][0][tt],
+                                #                       mem_view['mixturews'][0][tt],
+                                #                       mem_view['dist1s'][0][tt])
+                            print('{}-->{}'.format(estr, dstr))
+
+                            plot_tool.plot_tsne2(mem_view['dist2s'][0][:min(5, len(bout_list[0]))],
+                                                 mem_view['mixturews'][0][:min(5, len(bout_list[0]))],
+                                                 mem_view['dist1s'][0][:min(5, len(bout_list[0]))], dstr)
 
                             print('+++')
 
@@ -276,17 +278,13 @@ def single_qa_task(args):
 
                         tescores = []
                         tescores4 = []
-                        distinct2 = []
                         bows = []
                         losses = []
                         losses2=[]
                         losses3 = []
                         all_out=[]
                         all_label=[]
-                        all_res_in = []
-                        all_res_out = []
-                        all_res_pred = []
-                        all_res_score = []
+
                         ntb = len(dialogs_list_valid) // batch_size + 1
                         for ii in range(ntb):
                             # llprint("\r{}/{}".format(ii, ntb))
@@ -309,14 +307,10 @@ def single_qa_task(args):
                                                                                ncomputer.teacher_force: ncomputer.get_bool_rand_incremental(decoder_length, prob_true_max=0),
                                                                                ncomputer.drop_out_keep: 1,
                                                                                ncomputer.testing_phase: True,
-                                                                               ncomputer.epochs:1.0*TOTAL_ANNEL_EPOCH
+                                                                               ncomputer.epochs: 1.0 * TOTAL_ANNEAL_EPOCH
                                                                                })
 
-                            # print(np.max(mem_view['zs'][0], axis=1))
-                            # print(np.min(mem_view['zs'][0], axis=1))
-                            # print(np.mean(mem_view['zs'][0], axis=1))
 
-                            # print('---')
                             losses.append(lost_v_rec)
                             losses2.append(loss_v_kl)
                             losses3.append(loss_v)
@@ -326,17 +320,12 @@ def single_qa_task(args):
                             bout_list = []
 
                             for b in range(rs):
-                                if args.beam_size == 0:
-                                    out_list = []
-                                    for io in range(out.shape[1]):
-                                        if out[b][io]==2:
-                                            break
-                                        out_list.append(out[b][io])
+                                out_list = []
+                                for io in range(out.shape[1]):
+                                    if out[b][io]==2:
+                                        break
+                                    out_list.append(out[b][io])
 
-                                else:
-                                    out_list = beam_search.leap_beam_search(pout[b],
-                                                                            beam_size=args.beam_size,
-                                                                            is_set=True, is_fix_length=False, stop_char=2)
                                 bout_list.append(out_list)
                             tescores.append(
                                 data_util.bleu_score(np.asarray(rin_list)[:rs], np.asarray(rout_list)[:rs],
@@ -348,14 +337,7 @@ def single_qa_task(args):
                                 bows.append(data_util.bow_score(np.asarray(rin_list)[:rs],
                                                                                   np.asarray(rout_list)[:rs],
                                                                                   np.asarray(bout_list)[:rs], tok2str, mat))
-                            elif args.mode=='cherry_pick':
-                                res_in, res_out, res_pred, res_score =data_util.cherry_pick(np.asarray(rin_list)[:rs],
-                                                                                  np.asarray(rout_list)[:rs],
-                                                                                  np.asarray(bout_list)[:rs], tok2str, 5, mat)
-                                all_res_in.extend(res_in)
-                                all_res_out.extend(res_out)
-                                all_res_pred.extend(res_pred)
-                                all_res_score.extend(res_score)
+
 
                             all_out+=bout_list[:rs]
                             all_label+=rout_list[:rs]
@@ -374,15 +356,6 @@ def single_qa_task(args):
                                     str2 += tok2str[c] + ' '
                                 print('{} --> {}'.format(str1,str2))
                                 print('---')
-                        elif args.mode == 'cherry_pick':
-                            print('=======================')
-                            alls = np.asarray(all_res_score)
-                            # print(alls)
-                            mind = alls.argsort()[::-1][:50]
-                            for indd in mind:
-                                print('{} --> {} vs {} with score {}'.format(all_res_in[indd], all_res_out[indd],
-                                                                             all_res_pred[indd],
-                                                                             all_res_score[indd]))
 
                         tloss=np.mean(losses)
                         tloss2 = np.mean(losses2)
@@ -450,7 +423,7 @@ if __name__ == '__main__':
     parser.add_argument('--mode', default="train")
     parser.add_argument('--use_mem', default=True, type=str2bool)
     parser.add_argument('--use_teacher', default=False, type=str2bool)
-    parser.add_argument('--task', default="cornell")
+    parser.add_argument('--task', default="cornell20_validpointer_20000_10_clean")
     parser.add_argument('--data_dir', default="./data/cornell20_20000_10/trim_20qa_single.pkl")
     parser.add_argument('--from_checkpoint', default="")
     parser.add_argument('--hidden_dim', default=768, type=int)
@@ -482,7 +455,7 @@ if __name__ == '__main__':
     os.environ["CUDA_VISIBLE_DEVICES"] = args.gpu_device
     #
     args.mode='train'
-    # args.from_checkpoint = 'default'
+    args.from_checkpoint = 'VDNC.Truemem_Truedec_Truedua_Falsewrp_15wsz_64msz_Falsetea_0att_Falseper_768hid_3nread_3nlayer'
     # args.use_mem=False
     # args.single_KL=True
     args.num_mog_mode=3
@@ -497,8 +470,5 @@ if __name__ == '__main__':
     # args.task = 'cornell20_x2'
 
     print(args)
-    if args.sampled_loss_dim > 0:
-        SAMPLED_SOFTMAX = 1
-
 
     single_qa_task(args)

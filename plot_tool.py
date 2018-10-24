@@ -66,7 +66,57 @@ def plot_tsne(dist1, mixw, dist2):
 
     plt.show()
 
+def plot_tsne2(dist1s, mixws, dist2s, dstr):
+    seq_len = len(dist1s)
+    fig, ax = plt.subplots(nrows=2, ncols=seq_len)
+    c=0
+    ldstr = dstr.strip().split()
+    for dist1,mixw, dist2 in zip(dist1s, mixws, dist2s):
+        point1s = sample_mgaussian(dist1, mixw, ns=100)
+        point2s = sample_gaussian(dist2, ns=100)
+        tsne_model = TSNE(perplexity=40, n_components=2, init='pca', n_iter=500, random_state=23)
+        new_value1s = tsne_model.fit_transform(point1s)
+        new_value2s = tsne_model.fit_transform(point2s)
+        x1 = []
+        y1 = []
+        for value in new_value1s:
+            x1.append(value[0])
+            y1.append(value[1])
 
+        x2 = []
+        y2 = []
+
+        for value in new_value2s:
+            x2.append(value[0])
+            y2.append(value[1])
+
+
+
+        maxx = 0
+        maxy = 0
+        for i in range(len(x1)):
+            ax[0][c].scatter(x1[i], y1[i], c='b')
+            maxx = max(maxx, abs(x1[i]))
+            maxy = max(maxy, abs(y1[i]))
+
+        ax[0][c].set_title(ldstr[c])
+
+        ax[0][c].set_xlim(-maxx*2, maxx*2)
+        ax[0][c].set_ylim(-maxy*2, maxy*2)
+
+        maxx = 0
+        maxy = 0
+        for i in range(len(x2)):
+            ax[1][c].scatter(x2[i], y2[i], c='r')
+            maxx = max(maxx, abs(x2[i]))
+            maxy = max(maxy, abs(y2[i]))
+
+        ax[1][c].set_xlim(-maxx * 2, maxx * 2)
+        ax[1][c].set_ylim(-maxy * 2, maxy * 2)
+
+        c+=1
+    fig.tight_layout()
+    plt.show()
 
 def plot_mgauss(dist1, mixw, dist2, xlim = (-5, 5), ylim = (-5, 5), xres = 500, yres = 500):
 
