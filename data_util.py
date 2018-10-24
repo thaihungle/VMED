@@ -288,9 +288,7 @@ def prepare_sample_batch(diag_list,word_space_size_input,word_space_size_output,
         mask=np.zeros(decoder_length, dtype=np.bool)
         for iii, token in enumerate(ins):
             input_vec[minlen-len(ins)+iii] = token
-            # if lm_train:
-            #     output_vec[minlen - len(ins) + iii+1] = token
-            #     mask[minlen - len(ins) + iii+1] = True
+
         input_vec[minlen] = 2
 
 
