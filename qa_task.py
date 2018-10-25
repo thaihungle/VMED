@@ -248,7 +248,8 @@ def single_qa_task(args):
 
                                 trscores.append(data_util.bleu_score(np.asarray(brin), np.asarray(brout),
                                                                              np.asarray(bout_list), tok2str))
-
+                            """
+                            #This is for visualization purpose
                             estr = ''
                             dstr = ''
                             for t in brin[0]:
@@ -273,7 +274,7 @@ def single_qa_task(args):
                                                  mem_view['dist1s'][0][:min(5, len(bout_list[0]))], dstr)
 
                             print('+++')
-
+                            """
                             print('done quick test train...')
 
                         tescores = []

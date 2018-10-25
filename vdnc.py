@@ -192,7 +192,6 @@ class VariationalDNC:
         self.decode_length = tf.placeholder(tf.int32, name='decode_length')  # variant length?
 
 
-        # distribution transformation from memory to posterior space
         size_gt=0
         if self.gt_type=='bow':
             self.size_gt=self.emb_size2
@@ -204,9 +203,9 @@ class VariationalDNC:
                                                          self.hidden_controller_dim * 2],
                                            initializer=tf.random_normal_initializer(stddev=0.1))
 
-            self.W_pior = tf.get_variable('pior_net', [self.hidden_controller_dim * 2,
-                                                       self.hidden_controller_dim * 2*self.read_heads_decode],
-                                          initializer=tf.random_normal_initializer(stddev=0.1))
+            self.W_prior = tf.get_variable('prior_net', [self.hidden_controller_dim * 2,
+                                                        self.hidden_controller_dim * 2 * self.read_heads_decode],
+                                           initializer=tf.random_normal_initializer(stddev=0.1))
             self.W_modew = tf.get_variable('modew_net', [self.hidden_controller_dim * 2,
                                                        self.read_heads_decode],
                                           initializer=tf.random_normal_initializer(stddev=0.1))
@@ -1295,7 +1294,7 @@ class VariationalDNC:
                     wm=None
                     for ns in nstate:
                         nh0 = tf.concat([ns[0], ns[1]], axis=-1)
-                        nh = tf.matmul(tf.reshape(nh0, [self.batch_size, -1]), self.W_pior)
+                        nh = tf.matmul(tf.reshape(nh0, [self.batch_size, -1]), self.W_prior)
                         if self.read_heads_decode==1:
                             dist = self.get_the_prior_dist_uni(nh)
                             z = self.sample_the_uni(dist)
